@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Learning Pathway</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .milestone-completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .progress-bar {
+            transition: width 0.3s ease-in-out;
+        }
+        .celebrate {
+            animation: bounce 0.5s ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Toast notification system
+        const Toast = ({ message, type, onClose }) => {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            const bgColor = type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+            
+            return (
+                <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`}>
+                    {message}
+                </div>
+            );
+        };
+
+        // Main Learning Pathway App
+        const LearningPathwayApp = () => {
+            const [currentSkills, setCurrentSkills] = useState(['Project Management', 'Data Analysis']);
+            const [targetRole, setTargetRole] = useState('AI-Enhanced Project Manager');
+            const [pathway, setPathway] = useState(null);
+            const [completedMilestones, setCompletedMilestones] = useState(new Set());
+            const [loading, setLoading] = useState(false);
+            const [availableRoles, setAvailableRoles] = useState([]);
+            const [toast, setToast] = useState(null);
+            const [showSkillForm, setShowSkillForm] = useState(false);
+            const [newSkill, setNewSkill] = useState('');
+
+            // Load available roles
+            useEffect(() => {
+                fetch('/api/roles')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            setAvailableRoles(data.roles);
+                        }
+                    })
+                    .catch(err => console.error('Failed to load roles:', err));
+            }, []);
+
+            // Generate pathway
+            const generatePathway = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch('/api/generate-pathway', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            skills: currentSkills,
+                            role: targetRole
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        setPathway(data.pathway);
+                        setCompletedMilestones(new Set()); // Reset progress
+                        showToast('🎉 Your learning pathway is ready!', 'success');
+                    } else {
+                        showToast('❌ Failed to generate pathway', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('❌ Network error occurred', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // Initial pathway generation
+            useEffect(() => {
+                generatePathway();
+            }, []);
+
+            const showToast = (message, type) => {
+                setToast({ message, type });
+            };
+
+            const closeToast = () => {
+                setToast(null);
+            };
+
+            const celebrateMilestone = (milestoneId) => {
+                setCompletedMilestones(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(milestoneId)) {
+                        newSet.delete(milestoneId);
+                        showToast('📝 Milestone unmarked', 'info');
+                    } else {
+                        newSet.add(milestoneId);
+                        showToast('🎉 Milestone completed! Great progress!', 'success');
+                    }
+                    return newSet;
+                });
+            };
+
+            const addSkill = () => {
+                if (newSkill.trim() && !currentSkills.includes(newSkill.trim())) {
+                    setCurrentSkills([...currentSkills, newSkill.trim()]);
+                    setNewSkill('');
+                    setShowSkillForm(false);
+                    showToast(`✅ Added "${newSkill.trim()}" to your skills`, 'success');
+                }
+            };
+
+            const removeSkill = (skillToRemove) => {
+                setCurrentSkills(currentSkills.filter(skill => skill !== skillToRemove));
+                showToast(`🗑️ Removed "${skillToRemove}" from your skills`, 'info');
+            };
+
+            const getTotalMilestones = () => {
+                return pathway?.skillGaps?.reduce((total, gap) => total + gap.milestones.length, 0) || 0;
+            };
+
+            const getProgressPercentage = () => {
+                const total = getTotalMilestones();
+                return total > 0 ? (completedMilestones.size / total) * 100 : 0;
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto p-6">
+                    {/* Header */}
+                    <div className="text-center mb-8 bg-white rounded-lg shadow-sm p-6">
+                        <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                            Interactive Learning Pathway
+                        </h1>
+                        <p className="text-lg text-gray-600 mb-6">
+                            Your personalized journey to AI-enhanced career roles
+                        </p>
+
+                        {/* Skills Input Section */}
+                        <div className="mb-6">
+                            <h3 className="font-semibold text-gray-700 mb-3">Your Current Skills:</h3>
+                            <div className="flex flex-wrap gap-2 justify-center mb-3">
+                                {currentSkills.map((skill, index) => (
+                                    <span 
+                                        key={index}
+                                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                                    >
+                                        {skill}
+                                        <button
+                                            onClick={() => removeSkill(skill)}
+                                            className="text-blue-600 hover:text-blue-800 ml-1"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                                <button
+                                    onClick={() => setShowSkillForm(true)}
+                                    className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-300"
+                                >
+                                    + Add Skill
+                                </button>
+                            </div>
+
+                            {showSkillForm && (
+                                <div className="flex gap-2 justify-center">
+                                    <input
+                                        type="text"
+                                        value={newSkill}
+                                        onChange={(e) => setNewSkill(e.target.value)}
+                                        placeholder="Enter a skill..."
+                                        className="px-3 py-1 border rounded-lg text-sm"
+                                        onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                                    />
+                                    <button
+                                        onClick={addSkill}
+                                        className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
+                                    >
+                                        Add
+                                    </button>
+                                    <button
+                                        onClick={() => setShowSkillForm(false)}
+                                        className="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Role Selection */}
+                        <div className="mb-6">
+                            <label className="block font-semibold text-gray-700 mb-2">Target Role:</label>
+                            <select
+                                value={targetRole}
+                                onChange={(e) => setTargetRole(e.target.value)}
+                                className="px-3 py-2 border rounded-lg text-sm"
+                            >
+                                {availableRoles.map((role, index) => (
+                                    <option key={index} value={role}>{role}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button
+                            onClick={generatePathway}
+                            disabled={loading}
+                            className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                            {loading ? '🔄 Generating...' : '🚀 Generate My Pathway'}
+                        </button>
+                    </div>
+
+                    {/* Pathway Results */}
+                    {pathway && (
+                        <>
+                            {/* Encouragement & Progress */}
+                            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                                    Your Journey to {pathway.targetRole}
+                                </h2>
+                                <p className="text-lg text-gray-600 mb-4">
+                                    {pathway.encouragement || '🌟 Every expert was once a beginner. You\'ve got this!'}
+                                </p>
+                                
+                                {/* Progress Bar */}
+                                <div className="bg-gray-200 rounded-full h-3 mb-2">
+                                    <div 
+                                        className="bg-green-500 h-3 rounded-full progress-bar"
+                                        style={{ width: `${getProgressPercentage()}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>Progress: {completedMilestones.size} / {getTotalMilestones()} milestones</span>
+                                    <span>{pathway.estimatedTime}</span>
+                                </div>
+                            </div>
+
+                            {/* Skill Gaps */}
+                            <div className="space-y-6">
+                                {pathway.skillGaps?.map((skillGap, index) => (
+                                    <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                                        <div className="p-6">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                                    <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-sm font-bold">
+                                                        {index + 1}
+                                                    </span>
+                                                    {skillGap.skill}
+                                                </h3>
+                                                
+                                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                    ⏱️ {skillGap.estimatedHours}h
+                                                </div>
+                                            </div>
+
+                                            {/* Milestones */}
+                                            <div className="mb-6">
+                                                <h4 className="font-medium text-gray-700 mb-3">Your Learning Milestones:</h4>
+                                                <div className="space-y-2">
+                                                    {skillGap.milestones?.map((milestone, idx) => {
+                                                        const milestoneId = `${skillGap.skill}-${idx}`;
+                                                        const isCompleted = completedMilestones.has(milestoneId);
+                                                        
+                                                        return (
+                                                            <div key={idx} className="flex items-center gap-3">
+                                                                <button
+                                                                    onClick={() => celebrateMilestone(milestoneId)}
+                                                                    className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${
+                                                                        isCompleted 
+                                                                            ? 'bg-green-500 border-green-500 text-white' 
+                                                                            : 'border-gray-300 hover:border-green-400'
+                                                                    }`}
+                                                                >
+                                                                    {isCompleted && '✓'}
+                                                                </button>
+                                                                <span className={`${isCompleted ? 'milestone-completed text-gray-500' : 'text-gray-700'}`}>
+                                                                    {milestone.description}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            {/* Learning Resources */}
+                                            <div>
+                                                <h4 className="font-medium text-gray-700 mb-3">Recommended Resources:</h4>
+                                                <div className="grid gap-3">
+                                                    {skillGap.resources?.map((resource, idx) => (
+                                                        <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                                                            <div className="flex items-start justify-between">
+                                                                <div className="flex-1">
+                                                                    <h5 className="font-medium text-gray-800">{resource.title}</h5>
+                                                                    <p className="text-sm text-gray-600 mt-1">{resource.provider}</p>
+                                                                    {resource.description && (
+                                                                        <p className="text-sm text-gray-500 mt-1">{resource.description}</p>
+                                                                    )}
+                                                                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                                                                        <span className="flex items-center gap-1">
+                                                                            ⭐ {resource.rating}
+                                                                        </span>
+                                                                        <span>📅 {resource.duration}</span>
+                                                                        <span className={`px-2 py-1 rounded-full text-xs ${
+                                                                            resource.cost === 'free' 
+                                                                                ? 'bg-green-100 text-green-700' 
+                                                                                : 'bg-blue-100 text-blue-700'
+                                                                        }`}>
+                                                                            {resource.cost}
+                                                                        </span>
+                                                                        {resource.verified && (
+                                                                            <span className="text-green-600">✓ Verified</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <a
+                                                                    href={resource.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="ml-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium whitespace-nowrap"
+                                                                >
+                                                                    Start Learning
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Alternatives */}
+                            {pathway.alternatives && pathway.alternatives.length > 0 && (
+                                <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
+                                    <h3 className="font-semibold text-gray-700 mb-4">🔄 Explore Alternative Roles:</h3>
+                                    <div className="grid gap-3">
+                                        {pathway.alternatives.map((alt, index) => (
+                                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                <div>
+                                                    <span className="font-medium">{alt.role}</span>
+                                                    <p className="text-sm text-gray-600">{alt.reason}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setTargetRole(alt.role);
+                                                        generatePathway();
+                                                    }}
+                                                    className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 text-sm"
+                                                >
+                                                    Explore This Role
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* Toast Notifications */}
+                    {toast && (
+                        <Toast
+                            message={toast.message}
+                            type={toast.type}
+                            onClose={closeToast}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(<LearningPathwayApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
