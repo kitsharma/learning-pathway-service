@@ -5,20 +5,30 @@ interface SearchResult {
   url: string;
   description: string;
   rating?: number;
+  provider?: string;
+  cost?: string;
+  duration?: string;
+}
+
+interface CourseSearchStrategy {
+  name: string;
+  searchFunction: (skillName: string) => Promise<SearchResult[]>;
 }
 
 export class ResourceFetcher {
   private perplexityApiKey: string;
   private googleApiKey: string;
+  private searchStrategies: CourseSearchStrategy[];
   
   constructor() {
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || '';
     this.googleApiKey = process.env.GOOGLE_AI_KEY || '';
+    
+    // Initialize search strategies in order of preference
+    this.searchStrategies = [];
   }
 
   async findVerifiedResources(skillName: string): Promise<LearningResource[]> {
-    const resources: LearningResource[] = [];
-    
     try {
       // Search for courses and resources using Perplexity
       const searchQuery = `Find the best online courses and learning resources for "${skillName}" from reputable providers like Coursera, edX, Udemy, LinkedIn Learning, and Microsoft Learn. Include URLs, ratings, and whether they are free or paid.`;
@@ -26,6 +36,7 @@ export class ResourceFetcher {
       const perplexityResults = await this.searchWithPerplexity(searchQuery);
       
       // Process and verify results
+      const resources: LearningResource[] = [];
       for (const result of perplexityResults) {
         const resource = await this.processSearchResult(result, skillName);
         if (resource) {

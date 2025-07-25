@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-07-25T00:51:29.339Z",
+  "testSkill": "Machine Learning",
+  "results": [
+    {
+      "name": "Grok (XAI)",
+      "success": false,
+      "responseTime": 555,
+      "rawResponse": "...",
+      "formattedResults": [],
+      "errorMessage": "HTTP 401: Unauthorized",
+      "providers": [],
+      "directLinks": 0,
+      "totalResults": 0
+    },
+    {
+      "name": "Perplexity",
+      "success": false,
+      "responseTime": 236,
+      "rawResponse": "...",
+      "formattedResults": [],
+      "errorMessage": "HTTP 401: Unauthorized",
+      "providers": [],
+      "directLinks": 0,
+      "totalResults": 0
+    },
+    {
+      "name": "Google Gemini",
+      "success": false,
+      "responseTime": 153,
+      "rawResponse": "...",
+      "formattedResults": [],
+      "errorMessage": "HTTP 403: Forbidden",
+      "providers": [],
+      "directLinks": 0,
+      "totalResults": 0
+    }
+  ]
+}

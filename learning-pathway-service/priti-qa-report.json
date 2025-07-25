@@ -1,0 +1,96 @@
+{
+  "timestamp": "2025-07-25T07:42:02.217Z",
+  "overallScore": 60,
+  "testResults": [
+    {
+      "testName": "Application Load Time",
+      "status": "WARNING",
+      "details": "Page loaded in 2040ms",
+      "userValue": "Slow load may frustrate users",
+      "technicalNotes": "Response status: 200"
+    },
+    {
+      "testName": "UI Elements Availability",
+      "status": "PASS",
+      "details": "Role selector: true, Skill controls: true",
+      "userValue": "Users can interact with career selection and skill input",
+      "technicalNotes": "React components rendered correctly"
+    },
+    {
+      "testName": "Pathway Generation with Live APIs",
+      "status": "PASS",
+      "details": "Generated in 5134ms",
+      "userValue": "Users receive personalized learning paths",
+      "technicalNotes": "Grok API integration status"
+    },
+    {
+      "testName": "Resource Provider Diversity",
+      "status": "PASS",
+      "details": "5 unique providers: Coursera, Class Central, edX, Udemy, LinkedIn Learning",
+      "userValue": "Diverse learning options give users choice",
+      "technicalNotes": "Total resources: 9, Direct links: 5"
+    },
+    {
+      "testName": "Resource URL Accessibility",
+      "status": "WARNING",
+      "details": "0/3 URLs accessible",
+      "userValue": "Working links prevent user frustration",
+      "technicalNotes": "Direct course pages vs search results pages"
+    }
+  ],
+  "resourceAnalysis": [
+    {
+      "title": "AI-Powered Customer Analytics",
+      "provider": "Coursera",
+      "url": "https://www.coursera.org/learn/ai-powered-customer-analytics",
+      "description": "Coursera",
+      "isDirectLink": true,
+      "isAccessible": false,
+      "loadTime": 470,
+      "hasEnrollButton": false,
+      "hasPriceInfo": false,
+      "quality_score": 4
+    },
+    {
+      "title": "AI-Powered Customer Analytics Courses",
+      "provider": "Class Central",
+      "url": "https://www.classcentral.com/search?q=AI-Powered%20Customer%20Analytics",
+      "description": "Class Central",
+      "isDirectLink": false,
+      "isAccessible": false,
+      "loadTime": 388,
+      "hasEnrollButton": false,
+      "hasPriceInfo": false,
+      "quality_score": 0
+    },
+    {
+      "title": "AI for Customer Analytics",
+      "provider": "edX",
+      "url": "https://www.edx.org/course/ai-for-customer-analytics",
+      "description": "edX",
+      "isDirectLink": true,
+      "isAccessible": false,
+      "loadTime": 812,
+      "hasEnrollButton": false,
+      "hasPriceInfo": true,
+      "quality_score": 5
+    }
+  ],
+  "recommendations": [
+    "🔗 Prioritize direct course links over search pages for better UX",
+    "🚨 Fix broken URLs - every dead link loses user trust",
+    "⚡ Optimize API response time - users expect < 3s load times"
+  ],
+  "providerDiversity": [
+    "Coursera",
+    "Class Central",
+    "edX",
+    "Udemy",
+    "LinkedIn Learning"
+  ],
+  "apiPerformance": {
+    "pathwayGenerationTime": 5134,
+    "resourceCount": 9,
+    "directLinkRatio": 0.5555555555555556
+  }
+}

@@ -154,10 +154,28 @@ export class PathwayService {
 
   // Method to get available roles for exploration
   async getAvailableRoles(): Promise<string[]> {
-    // For MVP, return hardcoded list
+    // Roles most impacted by AI displacement - focusing on transition opportunities
     return [
-      'AI-Enhanced Project Manager',
-      'AI-Enhanced Data Analyst'
+      'AI-Enhanced Customer Experience Specialist',
+      'AI-Enhanced Administrative Coordinator', 
+      'AI-Enhanced Financial Services Advisor',
+      'AI-Enhanced Healthcare Information Manager',
+      'AI-Enhanced Retail Operations Manager',
+      'AI-Enhanced Human Resources Specialist',
+      'AI-Enhanced Marketing Communications Manager',
+      'AI-Enhanced Operations Analyst',
+      'AI-Enhanced Quality Assurance Coordinator',
+      'AI-Enhanced Business Intelligence Analyst',
+      'AI-Enhanced Content Strategy Manager',
+      'AI-Enhanced Sales Development Representative',
+      'AI-Enhanced Process Improvement Specialist',
+      'AI-Enhanced Training and Development Coordinator',
+      'AI-Enhanced Compliance and Risk Analyst',
+      'AI-Enhanced Event Coordination Manager',
+      'AI-Enhanced Research and Insights Analyst',
+      'AI-Enhanced Digital Marketing Specialist',
+      'AI-Enhanced Supply Chain Coordinator',
+      'AI-Enhanced Customer Success Manager'
     ];
   }
 

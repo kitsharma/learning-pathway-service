@@ -10,7 +10,7 @@ import { PathwayService } from './services/pathway';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -148,21 +148,32 @@ process.on('SIGINT', async () => {
 
 // Start server
 async function startServer() {
-  await initializeService();
-  
-  app.listen(PORT, () => {
-    console.log(`🌐 Learning Pathway API running on http://localhost:${PORT}`);
-    console.log(`📊 Database: ${process.env.GRAPH_DB_TYPE || 'memory'}`);
-    console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('');
-    console.log('📚 Available endpoints:');
-    console.log(`   GET  http://localhost:${PORT}/`);
-    console.log(`   GET  http://localhost:${PORT}/health`);
-    console.log(`   GET  http://localhost:${PORT}/api/roles`);
-    console.log(`   POST http://localhost:${PORT}/api/generate-pathway`);
-    console.log(`   POST http://localhost:${PORT}/api/skill-suggestions`);
-  });
+  try {
+    await initializeService();
+    
+    const server = app.listen(PORT, () => {
+      console.log(`🌐 Learning Pathway API running on http://localhost:${PORT}`);
+      console.log(`📊 Database: ${process.env.GRAPH_DB_TYPE || 'memory'}`);
+      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('');
+      console.log('📚 Available endpoints:');
+      console.log(`   GET  http://localhost:${PORT}/`);
+      console.log(`   GET  http://localhost:${PORT}/health`);
+      console.log(`   GET  http://localhost:${PORT}/api/roles`);
+      console.log(`   POST http://localhost:${PORT}/api/generate-pathway`);
+      console.log(`   POST http://localhost:${PORT}/api/skill-suggestions`);
+    });
+    
+    server.on('error', (error) => {
+      console.error('❌ Server error:', error);
+      process.exit(1);
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
 }
 
 // Start the application
-startServer().catch(console.error);
+startServer();
