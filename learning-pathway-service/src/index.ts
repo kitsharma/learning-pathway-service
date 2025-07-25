@@ -2,9 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import multer from 'multer';
 import { ConfigManager } from './config/database';
 import { GraphDatabaseFactory } from './database/factory';
 import { PathwayService } from './services/pathway';
+import { ResumeParser } from './services/resume-parser';
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +18,25 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type ${file.mimetype} not supported`));
+    }
+  }
+});
 
 // Global variables
 let pathwayService: PathwayService;
@@ -116,6 +137,69 @@ app.post('/api/skill-suggestions', async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+});
+
+// Resume upload and parsing endpoint
+app.post('/api/upload-resume', upload.single('resume'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No file uploaded' 
+      });
+    }
+
+    const resumeParser = new ResumeParser();
+    const fs = await import('fs');
+    
+    // Read file buffer
+    const buffer = await fs.promises.readFile(req.file.path);
+    
+    // Parse resume
+    const parseResult = await resumeParser.parseResume(
+      buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+    
+    // Clean up uploaded file
+    await fs.promises.unlink(req.file.path);
+    
+    // Convert extracted skills to the format expected by the frontend
+    const formattedSkills = parseResult.skills
+      .filter(skill => skill.confidence >= 0.7) // Only high confidence skills
+      .slice(0, 10) // Limit to top 10 skills
+      .map(skill => skill.name);
+    
+    res.json({
+      success: true,
+      data: {
+        skills: formattedSkills,
+        detailedSkills: parseResult.skills,
+        piiItems: parseResult.piiItems,
+        redactedText: parseResult.redactedText,
+        metadata: parseResult.metadata
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('Resume upload error:', error);
+    
+    // Clean up file if it exists
+    if (req.file) {
+      const fs = await import('fs');
+      try {
+        await fs.promises.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.error('File cleanup error:', cleanupError);
+      }
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to process resume'
     });
   }
 });

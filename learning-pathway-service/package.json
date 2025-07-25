@@ -16,12 +16,17 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
-    "neo4j-driver": "^5.28.1"
+    "mammoth": "^1.9.1",
+    "multer": "^2.0.2",
+    "neo4j-driver": "^5.28.1",
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.1.0",
+    "@types/pdf-parse": "^1.1.5",
     "@types/puppeteer": "^5.4.7",
     "nodemon": "^3.1.10",
     "puppeteer": "^24.15.0",
